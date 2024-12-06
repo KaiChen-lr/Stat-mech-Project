@@ -177,7 +177,13 @@ int main()
         for (int i = 0; i < N; i++)
         {
             for (int j = 0; j < 3; j++)
+            {
                 system[i].q[j] += 0.5 * dt * system[i].p[j] / system[i].m;
+                if (system[i].q[j]<0)
+                    system[i].q[j]+=L;
+                else if (system[i].q[j]>L)
+                    system[i].q[j]-=L;
+            }
         }
         // Update momentum with friction and random force
         for (int i = 0; i < N; i++)
