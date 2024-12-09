@@ -14,6 +14,8 @@ public:
     vector<double> p; // Momentum, kg*nm/fs
     vector<double> q; // Position, nm
     double m;         // Mass, kg
+    double epsilon;   // Two parameters for LJ potential
+    double sigma;
 };
 
 class vec
@@ -41,10 +43,10 @@ void calcDistance(particle A, particle B, vec &rAB, double length)
 }
 
 // Function calculate the force on A because of B
-void fLJ(vec rAB, vec &fA, vec &fB, double length)
+void fLJ(vec rAB, vec &fA, vec &fB, particle A, particle B, double length)
 {
-    double eps = 1.66e-33; // kg*nm^2/fs^2
-    double sig = 0.34;     // nm
+    double eps = sqrt(A.epsilon * B.epsilon); // kg*nm^2/fs^2
+    double sig = 0.5 * (A.sigma + B.sigma);   // nm
     double sr = sig / rAB.vecMod;
     double f = 0.0;
     if (rAB.vecMod < length / 2)
@@ -58,7 +60,7 @@ void fLJ(vec rAB, vec &fA, vec &fB, double length)
 }
 
 // Function to calculate the force for the whole system
-void updateLJForce(vector<vec> &forces, vector<vector<vec>> rMatrix, double length)
+void updateLJForce(vector<vec> &forces, vector<vector<vec>> rMatrix, vector<particle> sys, double length)
 {
     for (int i = 0; i < forces.size(); i++)
     {
@@ -68,7 +70,7 @@ void updateLJForce(vector<vec> &forces, vector<vector<vec>> rMatrix, double leng
     for (int i = 0; i < forces.size(); i++)
     {
         for (int j = i + 1; j < forces.size(); j++)
-            fLJ(rMatrix[i][j], forces[i], forces[j], length);
+            fLJ(rMatrix[i][j], forces[i], forces[j], sys[i], sys[j], length);
     }
     for (int i = 0; i < forces.size(); i++)
         forces[i].vecMod = sqrt(forces[i].vecComp[0] * forces[i].vecComp[0] + forces[i].vecComp[1] * forces[i].vecComp[1] + forces[i].vecComp[2] * forces[i].vecComp[2]);
@@ -111,6 +113,7 @@ int main()
     // Construct the simulation cell
     double N = 216;
     double L = 6.0;
+    // Add 108 Argon atoms and then 108 Neon atoms
     for (int i = 0; i < 6; i++)
     {
         for (int j = 0; j < 6; j++)
@@ -120,7 +123,18 @@ int main()
                 particle temp;
                 temp.q = {i * 1.0, j * 1.0, k * 1.0};
                 temp.p = {0.0, 0.0, 0.0};
-                temp.m = 0.039948 / (6.02214e23);
+                if (i < 3)
+                {
+                    temp.m = 0.039948 / (6.02214e23);
+                    temp.epsilon = 1.66e-33; // kg*nm^2/fs^2
+                    temp.sigma = 0.34;       // nm
+                }
+                else if (i >= 3)
+                {
+                    temp.m = 0.0201797 / (6.02214e23);
+                    temp.epsilon = 5.148605430000001e-34; // kg*nm^2/fs^2
+                    temp.sigma = 0.2782;
+                }
                 system.emplace_back(temp);
             }
         }
@@ -143,7 +157,7 @@ int main()
         rMatrix.emplace_back(temp);
     }
     rMatrixUpdater(system, rMatrix, L);
-    updateLJForce(force, rMatrix, L);
+    updateLJForce(force, rMatrix, system, L);
 
     // Start simulation
     fstream trjOut("trj.txt", ios::out);
@@ -179,10 +193,10 @@ int main()
             for (int j = 0; j < 3; j++)
             {
                 system[i].q[j] += 0.5 * dt * system[i].p[j] / system[i].m;
-                if (system[i].q[j]<0)
-                    system[i].q[j]+=L;
-                else if (system[i].q[j]>L)
-                    system[i].q[j]-=L;
+                if (system[i].q[j] < 0)
+                    system[i].q[j] += L;
+                else if (system[i].q[j] > L)
+                    system[i].q[j] -= L;
             }
         }
         // Update momentum with friction and random force
@@ -196,17 +210,16 @@ int main()
                 system[i].p[j] = pLast * exp(-gamma * dt) + 1.0e-6 * r * sqrt(kB * TB * system[i].m) * sqrt(1.0 - exp(-2 * gamma * dt));
             }
         }
-        //Update positions to t+dt
+        // Update positions to t+dt
         for (int i = 0; i < N; i++)
         {
             for (int j = 0; j < 3; j++)
                 system[i].q[j] += 0.5 * dt * system[i].p[j] / system[i].m;
         }
-        //Update forces and r matrix
-
+        // Update forces and r matrix
         rMatrixUpdater(system, rMatrix, L);
-        updateLJForce(force, rMatrix, L);
-        //Update momentum to t+dt
+        updateLJForce(force, rMatrix, system, L);
+        // Update momentum to t+dt
         for (int i = 0; i < N; i++)
         {
             for (int j = 0; j < 3; j++)
