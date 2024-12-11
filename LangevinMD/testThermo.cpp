@@ -167,9 +167,9 @@ int main()
     default_random_engine generator((unsigned int)(time(0)));
     normal_distribution<double> distribution(0.0, 1.0);
 
-    for (int step = 1; step <= 10000; step++)
+    for (int step = 1; step <= 1000000; step++)
     {
-        if (step % 100 == 0 || step == 1)
+        if (step % 1000 == 0 || step == 1)
         {
             // Calculate the temperature and print to the file
             double T = calcT(system, N);
