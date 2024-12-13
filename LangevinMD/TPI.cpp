@@ -78,7 +78,7 @@ int main()
     for (int i = 0; i < 594; i++)
     {
         double count = 6.0 * 6.0 * 6.0;
-        double dE = 0.0;
+        double BFdE = 0.0;
         for (int x = 0; x < 6; x++)
         {
             for (int y = 0; y < 6; y++)
@@ -90,16 +90,16 @@ int main()
                     {
                         double upperLimit = 25.89;
                         double ENow = calcLJEnergy(rTest, prodTrj[i][j], 0, j, 6.0);
-                        if (ENow != ENow || ENow > upperLimit)
-                            count -= 1.0;
+                        if (ENow != ENow)
+                            BFdE += 0.0;
                         else
-                            dE += ENow;
+                            BFdE += exp(-ENow * 1000.0 / (8.314 * 300.0));
                     }
                 }
             }
         }
-        dE /= count;
-        dEList.emplace_back(dE);
+        BFdE /= count;
+        dEList.emplace_back(BFdE);
     }
     fstream dEOut("Delta E of TPI.txt", ios::out);
     for (int i = 0; i < dEList.size(); i++)
