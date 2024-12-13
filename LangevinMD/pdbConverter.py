@@ -15,7 +15,7 @@ def writePdb(positions, outputFile):
                 atomName = "NE"
                 residueName = "NEO"
 
-            pdbLine = f"ATOM  {atomNumber:5}  {atomName}  {residueName} A{atomNumber:4}    {x:8.3f} {y:7.3f} {z:7.3f}  1.00 20.00           {atomName[0]}\n"
+            pdbLine = f"ATOM  {atomNumber:5}  {atomName}  {residueName} A{atomNumber:4}    {x*10:8.3f} {y*10:7.3f} {z*10:7.3f}  1.00 20.00           {atomName[0]}\n"
 
             pdbFile.write(pdbLine)
 
