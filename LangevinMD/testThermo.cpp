@@ -99,7 +99,7 @@ double calcT(vector<particle> sys, double N)
     {
         for (int j = 0; j < 3; j++)
         {
-            EK += sys[i].p[j] * sys[i].p[j] * 1.0e12 /( 2.0 * sys[i].m);
+            EK += sys[i].p[j] * sys[i].p[j] * 1.0e12 / (2.0 * sys[i].m);
         }
     }
     double T = EK / (1.5 * N * kB);
@@ -160,16 +160,16 @@ int main()
 
     // Start simulation
     fstream trjOut("trj.txt", ios::out);
-    fstream TOut("Temperature.txt", ios::out);
+    fstream TOut("TemperatureTest.txt", ios::out);
     double dt = 1.0;      // fs
     double gamma = 0.001; // fs^-1
     double TB = 300.0;    // Bath temperature
     default_random_engine generator((unsigned int)(time(0)));
     normal_distribution<double> distribution(0.0, 1.0);
 
-    for (int step = 1; step <= 1000000; step++)
+    for (int step = 1; step <= 50000; step++)
     {
-        if (step % 1000 == 0 || step == 1)
+        if (step % 1 == 0 || step == 1)
         {
             // Calculate the temperature and print to the file
             double T = calcT(system, N);
